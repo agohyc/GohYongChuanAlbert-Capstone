@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./stockForm.css";
 
 export default function StockForm() {
@@ -6,11 +6,44 @@ export default function StockForm() {
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
 
+  // updated event handler
   function handleSubmit(e) {
-    e.preventDefault();
-    // Not required to work yet — prevents page refresh.
-    // Later: pass data up to App via props callback (e.g., onAddStock).
-  }
+  e.preventDefault();
+
+  if (!symbol) return;
+  
+  validateSymbol(symbol).then((isValid) => {
+    if (!isValid) {
+      alert("Invalid stock symbol ❌");
+      return;
+    }
+
+    alert("Valid symbol ✅");
+
+    // later:
+    // send to parent or add to state
+  });
+}
+
+  // Import API key
+  const API_KEY = import.meta.env.VITE_ALPHA_VANTAGE_KEY;
+
+  // Validation function
+  function validateSymbol(symbol) {
+  const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${symbol}&apikey=${API_KEY}`;
+
+  return fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      if (!data.bestMatches) return false;
+
+      return data.bestMatches.some(
+        (match) => match["1. symbol"] === symbol.toUpperCase()
+      );
+    })
+    .catch(() => false);
+}
+
 
   return (
     <form className="stock-form" onSubmit={handleSubmit}>
